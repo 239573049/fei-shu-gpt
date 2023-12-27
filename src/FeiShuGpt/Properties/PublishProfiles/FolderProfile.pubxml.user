@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>D:\token\FeishuGpt\src\FeiShuGpt\bin\Release\net8.0\publish\</_PublishTargetUrl>
+    <History>True|2023-12-27T09:00:46.7839072Z;True|2023-12-27T16:59:01.5538557+08:00;False|2023-12-27T16:58:09.8538817+08:00;True|2023-12-27T16:57:15.5798235+08:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

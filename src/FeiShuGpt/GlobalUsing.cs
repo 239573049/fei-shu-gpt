@@ -1,0 +1,15 @@
+﻿global using FeiShuGpt.Dto;
+global using FeiShuGpt;
+global using System.Text.Json;
+global using FeiShuGpt.Callers;
+global using Masa.BuildingBlocks.Service.Caller;
+global using FeiShuGpt.Options;
+global using Microsoft.SemanticKernel;
+global using Microsoft.SemanticKernel.Connectors.OpenAI;
+global using FreeSql.DataAnnotations;
+global using Microsoft.SemanticKernel.ChatCompletion;
+global using Masa.Contrib.Service.Caller.HttpClient;
+global using System.Net.Http.Headers;
+global using System.Text;
+global using System.Text.Json.Serialization;
+global using System.Text.Encodings.Web;

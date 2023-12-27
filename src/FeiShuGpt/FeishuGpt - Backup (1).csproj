@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+	
+  <ItemGroup>
+  	<PackageReference Include="FreeSql.Provider.Sqlite" Version="3.2.808" />
+  	<PackageReference Include="Masa.Contrib.Service.Caller.HttpClient" Version="1.0.0" />
+  	<PackageReference Include="Masa.Contrib.Service.MinimalAPIs" Version="1.0.0" />
+  	<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Folder Include="Callers\" />
+  </ItemGroup>
+</Project>
