@@ -1,0 +1,16 @@
+services:
+  feishu-gpt:
+    image: registry.cn-shenzhen.aliyuncs.com/tokengo/feishu-gpt:latest
+    restart: always
+    container_name: feishu-gpt
+    ports:
+      - 1001:8080
+    environment:
+      APPID: xx
+      APPSECRET: xx
+      GPTKEY: xx
+      ENDPOINT: xx
+      BOTNAME: xx
+      TZ: Asia/Shanghai
+    volumes:
+      - ./FeiShuGpt.db:/app/FeiShuGpt.db
