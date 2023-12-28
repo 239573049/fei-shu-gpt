@@ -1,3 +1,5 @@
+using FeiShuGpt.Callers.Middlewares;
+
 var builder = WebApplication.CreateBuilder(args);
 
 #region 读取环境变量修改配置
@@ -60,7 +62,7 @@ builder.Services.AddSingleton<IFreeSql>(r =>
 var httpClient = new HttpClient(new OpenAiHttpClientHandler());
 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 httpClient.DefaultRequestHeaders.Add("User-Agent", "FeiShuGpt");
-builder.Services.AddSingleton<Kernel>((_) => Kernel.CreateBuilder().AddOpenAIChatCompletion(
+builder.Services.AddTransient<Kernel>((_) => Kernel.CreateBuilder().AddOpenAIChatCompletion(
     OpenAiOptions.Model,
     OpenAiOptions.Key,
     httpClient: httpClient).Build());
@@ -99,7 +101,6 @@ app.Use((async (context, next) =>
 {
     try
     {
-
         await next(context);
     }
     catch (Exception e)

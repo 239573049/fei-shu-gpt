@@ -1,8 +1,6 @@
-﻿using System.Linq;
+﻿namespace FeiShuGpt.Services;
 
-namespace FeiShuGpt.Services;
-
-public class ChatService(FeiShuCaller feiShuCaller, Kernel kernel, OpenAIChatCompletionService openAiChatCompletion)
+public class ChatService(ChatAiService chatAiService)
     : ApplicationService<ChatService>
 {
     /// <summary>
@@ -40,18 +38,18 @@ public class ChatService(FeiShuCaller feiShuCaller, Kernel kernel, OpenAIChatCom
         }
 
         // 处理飞书开放平台的事件回调
-        if ((input.header.event_type == "im.message.receive_v1"))
+        if (input.header.event_type == "im.message.receive_v1")
         {
-            var eventId = input.header.event_id;
-            var messageId = input._event.message.message_id;
-            var chatId = input._event.message.chat_id;
-            // var senderId = input._event.sender.sender_id.user_id;
-            var sessionId = input._event.sender.sender_id.open_id;
+            var eventId = input.header.event_id; // 事件id
+            var messageId = input._event.message.message_id; // 消息id
+            var chatId = input._event.message.chat_id; // 群聊id
+            var senderId = input._event.sender.sender_id.user_id; // 发送人id
+            var sessionId = input._event.sender.sender_id.open_id; // 发送人openid
 
             // 对于同一个事件，只处理一次
             if (await FreeSql.Select<EventDto>().AnyAsync(x => x.EventId == eventId))
             {
-                Logger.LogWarning("skip repeat event");
+                Logger.LogInformation("跳过重复事件");
                 await context.Response.WriteAsJsonAsync(new
                 {
                     code = 0,
@@ -67,8 +65,8 @@ public class ChatService(FeiShuCaller feiShuCaller, Kernel kernel, OpenAIChatCom
                 // 不是文本消息，不处理
                 if (input._event.message.message_type != "text")
                 {
-                    await Reply(messageId, "暂不支持其他类型的提问");
-                    Logger.LogWarning("skip and Reply not support");
+                    await chatAiService.SendMessages(messageId, "暂不支持其他类型的提问");
+                    Logger.LogWarning("暂不支持其他类型的提问");
                     await context.Response.WriteAsJsonAsync(new
                     {
                         code = 0,
@@ -78,7 +76,7 @@ public class ChatService(FeiShuCaller feiShuCaller, Kernel kernel, OpenAIChatCom
 
                 // 是文本消息，直接回复
                 var userInput = JsonSerializer.Deserialize<UserInput>(input._event.message.content);
-                await HandleReply(userInput, sessionId);
+                await chatAiService.TextMessageAsync(userInput, sessionId);
                 await context.Response.WriteAsJsonAsync(new
                 {
                     code = 0,
@@ -112,7 +110,7 @@ public class ChatService(FeiShuCaller feiShuCaller, Kernel kernel, OpenAIChatCom
                 }
 
                 var userInput = JsonSerializer.Deserialize<UserInput>(input._event.message.content);
-                await HandleReply(userInput, chatId, "chat_id");
+                await chatAiService.TextMessageAsync(userInput, chatId, "chat_id");
                 await context.Response.WriteAsJsonAsync(new
                 {
                     code = 0,
@@ -126,67 +124,5 @@ public class ChatService(FeiShuCaller feiShuCaller, Kernel kernel, OpenAIChatCom
         {
             code = 2,
         });
-    }
-
-    async Task HandleReply(UserInput userInput, string sessionId, string receive_id_type = "open_id")
-    {
-        var question = userInput.text.Replace("@_user_1", "");
-        Logger.LogWarning("question: " + question);
-        var action = question.Trim();
-
-        var prompt = await BuildConversation(sessionId, question);
-
-        var history = new ChatHistory();
-        history.AddRange(prompt);
-        var response = await openAiChatCompletion.GetChatMessageContentAsync(history);
-
-        await FreeSql.Insert(new MessageDto()
-        {
-            Content = question,
-            CreatedTime = DateTime.Now,
-            Id = Guid.NewGuid(),
-            Role = GptRoleHelper.GetGptRole(AuthorRole.User),
-            SessionId = sessionId,
-            Type = "text",
-        }).ExecuteAffrowsAsync();
-
-        await Reply(sessionId, response.Content, receive_id_type);
-    }
-
-
-    // 根据sessionId构造用户会话
-    async ValueTask<List<ChatMessageContent>> BuildConversation(string sessionId, string question)
-    {
-        int pageSize = 2;
-
-        var result = await FreeSql.Select<MessageDto>().Where(x => x.SessionId == sessionId)
-            .OrderByDescending(x => x.CreatedTime)
-            .Page(1, pageSize)
-            .ToListAsync();
-
-        var prompt = result.OrderBy(x => x.CreatedTime).Select(value =>
-
-            new ChatMessageContent(GptRoleHelper.GetAuthorRole(value.Role), value.Content)
-        ).ToList();
-
-        prompt.Add(new ChatMessageContent(AuthorRole.User, question));
-        return prompt;
-    }
-
-    private async Task Reply(string sessionId, string message, string receive_id_type = "open_id")
-    {
-        try
-        {
-            await feiShuCaller.SendMessages(
-                new SendMessageInput(JsonSerializer.Serialize(new
-                {
-                    text = message,
-                }, Constant.JsonSerializerOptions), "text",
-                    sessionId), receive_id_type);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError("send message to feishu error", e, sessionId);
-        }
     }
 }

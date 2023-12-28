@@ -1,4 +1,6 @@
-﻿namespace FeiShuGpt.Callers;
+﻿using FeiShuGpt.Callers.Middlewares;
+
+namespace FeiShuGpt.Callers;
 
 public class FeiShuCaller(ICaller caller, ILogger<FeiShuCaller> logger) : HttpClientCallerBase
 {

@@ -1,4 +1,4 @@
-﻿namespace FeiShuGpt;
+﻿namespace FeiShuGpt.Callers.Middlewares;
 
 public class TokenCallerMiddleware(IHttpClientFactory httpClientFactory) : ICallerMiddleware
 {
@@ -11,6 +11,10 @@ public class TokenCallerMiddleware(IHttpClientFactory httpClientFactory) : ICall
         await next();
     }
 
+    /// <summary>
+    /// 刷新飞书token
+    /// </summary>
+    /// <param name="requestMessage"></param>
     private async ValueTask RefreshTokenAsync(HttpRequestMessage requestMessage)
     {
         if (requestMessage.Headers.Contains("Authorization"))
@@ -25,8 +29,7 @@ public class TokenCallerMiddleware(IHttpClientFactory httpClientFactory) : ICall
         }
 
         var client = httpClientFactory.CreateClient(nameof(RefreshTokenAsync));
-        var request = new HttpRequestMessage(HttpMethod.Post,
-            $"https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal");
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal");
         
         request.Content = new StringContent(JsonSerializer.Serialize(new
         {
